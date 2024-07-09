@@ -1,0 +1,50 @@
+chuẩn bị 3 PC và 1 switch, 1 Router, 1 server đóng giả làm kẻ tấn công
+------------Cấu hình------------
+Bước 1: Dùng RouterDHCP để cấp phát địa chỉ IP cho các PC
+------------RouterDHCP----------
+en
+conf t
+int Gig0/0
+no sh
+ip add 10.0.0.1 255.0.0.0
+exit
+ip dhcp pool MYLAN
+net 10.0.0.0 255.0.0.0
+default-router 10.0.0.1
+dns-server 8.8.8.8
+exit
+do wri
+---------------------------------
+Bước 2: Cấu hình Server giả mạo cấp phát địa chỉ IP
+------------ServerFake-----------
+Server-fake cấu hình ip 172.168.0.1, subnetmask 
+default gateway là 172.168.0.1
+DNS server là 9.9.9.9
+Vào service -> DHCP -> on
+Poolname -> poolserver
+default gateway 172.168.0.1
+DNS server 9.9.9.9
+start ip address 172.168.0.1
+subnetmask 255.255.0.0
+Save
+------------------------------------------
+=> Xem kết quả, ta thấy một số PC sẽ nhận IP từ server giả mạo
+---------------Giải pháp------------------
+cấu hình DHCP snooping trên switch
+DHCP spoofing là kỹ thuật tấn công mạng, trong đó kẻ tấn công giả
+mạo một máy chủ DHCP hoặc trung gian để phân phối các thông tin
+cấu hình IP sai lệch cho các thiết bị trong mạng.
+Mục đích của kỹ thuật này thường là để kiểm soát lưu lượng mạng
+hoặc thực hiện các cuộc tấn công khác.
+---------------Cấu hình DHCP snooping trên switch----------------
+en
+conf t
+ip dhcp snooping
+ip dhcp snooping vlan 1
+no ip dhcp snooping information option
+int fa0/1
+ip dhcp snooping trust
+=> ta thấy PC đã nhận IP từ Router thay vì server giả mạo vì chỉ có cổng Fa0/1 mới được
+cấp phát IP
+--------------kiểm tra lại--------------
+show ip dhcp snooping

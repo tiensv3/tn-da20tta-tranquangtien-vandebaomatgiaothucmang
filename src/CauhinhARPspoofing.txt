@@ -1,0 +1,43 @@
+Router# en
+Router# conf t
+Router# int gig0/0
+Router# no sh
+Router# ip address 192.168.1.1 255.255.255.0
+Router# ip dhcp pool LAN00
+Router# network 192.168.1.0 255.255.255.0
+Router# default-router 192.168.1.1
+Router# dns-server 8.8.8.8
+Router# exit
+Router# do  wri
+
+Router# int gig0/1
+Router# no sh
+Router# ip address 192.168.2.1 255.255.255.0
+Router# ip dhcp pool LAN01
+Router# network 192.168.2.0 255.255.255.0
+Router# default-router 192.168.2.1
+Router# dns-server 8.8.8.8
+Router# exit
+Router# do  wri
+----------------DHCP snooping------------------
+Switch>en
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#no ip dhcp snooping information option
+Switch(config)#ip dhcp snooping
+Switch(config)#ip dhcp snooping vlan 1
+Switch(config)#int f0/1
+Switch(config-if)#ip dhcp snooping trust
+Switch(config-if)#exit
+
+----------------arp inspection -------------------
+Switch>en
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#ip arp inspection vlan 1 
+Switch(config)#interface fa0/1
+Switch(config-if)#ip arp inspection trust
+Switch(config-if)#exit
+copy running-config startup-config
+
+
