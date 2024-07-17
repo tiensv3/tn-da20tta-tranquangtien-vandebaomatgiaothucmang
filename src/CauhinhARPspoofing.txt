@@ -1,43 +1,73 @@
-Router# en
-Router# conf t
-Router# int gig0/0
-Router# no sh
-Router# ip address 192.168.1.1 255.255.255.0
-Router# ip dhcp pool LAN00
-Router# network 192.168.1.0 255.255.255.0
-Router# default-router 192.168.1.1
-Router# dns-server 8.8.8.8
-Router# exit
-Router# do  wri
 
-Router# int gig0/1
-Router# no sh
-Router# ip address 192.168.2.1 255.255.255.0
-Router# ip dhcp pool LAN01
-Router# network 192.168.2.0 255.255.255.0
-Router# default-router 192.168.2.1
-Router# dns-server 8.8.8.8
-Router# exit
-Router# do  wri
-----------------DHCP snooping------------------
-Switch>en
-Switch#conf t
-Enter configuration commands, one per line.  End with CNTL/Z.
-Switch(config)#no ip dhcp snooping information option
-Switch(config)#ip dhcp snooping
-Switch(config)#ip dhcp snooping vlan 1
-Switch(config)#int f0/1
-Switch(config-if)#ip dhcp snooping trust
-Switch(config-if)#exit
+cấu hình DHCP cho cả 2 cổng gig0/0 và gig0/1 
+----------Router---------------
+en
+conf t
+int gig0/0
+no sh
+ip address 192.168.1.1 255.255.255.0
+ip dhcp pool LAN00
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+dns-server 8.8.8.8
+exit
+do  wri
 
-----------------arp inspection -------------------
-Switch>en
-Switch#conf t
-Enter configuration commands, one per line.  End with CNTL/Z.
-Switch(config)#ip arp inspection vlan 1 
-Switch(config)#interface fa0/1
-Switch(config-if)#ip arp inspection trust
-Switch(config-if)#exit
+int gig0/1
+no sh
+ip address 192.168.2.1 255.255.255.0
+ip dhcp pool LAN01
+network 192.168.2.0 255.255.255.0
+default-router 192.168.2.1
+dns-server 8.8.8.8
+exit
+do  wri
+---------------------------------------
+Kiểm tra kết nối giữa các PC
+----------------------------------------
+kiểm tra bảng MAC trên switch
+show mac-add dynamic
+----------------------------------------
+Kẻ tấn công ping đến default gateway để lấy
+địa chỉ MAC, sau đó giả làm MAC của defautgw
+sau đó ping đến PC nạn nhân để cập nhật lại
+bảng arp trên máy nạn nhân và switch
+trên switch kiểm tra bảng mac bằng 
+show mac-add dynamic
+=>có thể thấy kẻ tấn công đã giả mạo MAC của 
+defautgateway và cập nhật trên switch
+Thử ping lại từ PC1 đến PC2
+=>Có thể thấy PC1 đã không thể ping được PC2
+vì kẻ tấn công đã giả mạo defautgateway để
+bắt gói tin từ pc1 qua defautgateway để đến PC2
+Để phòng chống việc này cần làm các việc:
+bật tính năng DHCP snooping, cấu hình DAI
+----------------------------------------------
+bật tính năng dhcp snooping trên switch
+----------------DHCP snooping (switch)------------------
+en
+conf t
+no ip dhcp snooping information option
+ip dhcp snooping
+ip dhcp snooping vlan 1
+int f0/1
+ip dhcp snooping trust
+exit
+exit
+show ip dhcp snooping
+
+----------------arp inspection (switch)-------------------
+en
+conf t
+ip arp inspection vlan 1 
+interface fa0/1
+ip arp inspection trust
+exit
+ip arp inspection validate src-mac dst-mac ip
+show ip arp inspection interfaces
 copy running-config startup-config
 
-
+Sau đó khởi động lại, xem bảng DHCP snooping binding
+show ip dhcp snooping binding
+Sau khi cấp phát địa chỉ IP tự động, DHCP snooping sẽ lưu IP và MAC tương ứng vào
+database để đối chiếu
